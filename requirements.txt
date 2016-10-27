@@ -1,3 +1,4 @@
 pySerial
+drawnow
 matplotlib
 numpy

@@ -1,8 +1,5 @@
 from app import *
 import serial
-import numpy
-import matplotlib.pyplot as plt
-from drawnow import *
 
 class Arduino(object):
     def __init__(self, port, baud_rate):
@@ -25,8 +22,20 @@ class Arduino(object):
         except ValueError as e:
             return False
 
+    def __extract_sensor_data(self, value):
+        #Valor recebido pelo arduino = sensor:NOME_SENSOR:VALOR_SENSOR
+        #Ex: sensor:Temperatura:23.5
+        data_list = value.split(':')
+        if data_list[0] == "sensor":
+            return [data_list[1], data_list[2]] #{NOME_SENSOR:VALOR_SENSOR}
+
     def add_sensor_data(self, name, value):
-        if not self.__sensor_added(name):
+        if not (type(value) == float):
+            print("Tipo de dados do sensor nao aceito. (Valor: {0})".format(value))
+        elif self.__sensor_added(name):
+            self.sensors[name].append(value)
+        else:
+            self.sensors[name] = [float(value)]
 
     def add_data(self, str_value):
         self.data.append(str(str_value))
@@ -53,29 +62,6 @@ class Arduino(object):
             log.debug("Desconectando do Arduino...")
             self.serial.close()
             log.debug("Desconectado.")
-
-class ArduinoStreamGraph(Arduino):
-    def __init__(self, port, baud_rate):
-        super(ArduinoStreamGraph, self).__init__(port, baud_rate)
-        self.title = "Arduino Streaming Data - TechWeek UNIFEV"
-        self.plot = plt
-
-    def start(self, limit=-1):
-        count = 0
-        if not self.isConnected:
-            self.connect()
-        self.plot.ion() #modo interativo para interacao em tempo real
-        while True:
-            while (self.serial.inWaiting()==0): # esperar ate possuir algo
-                log.debug("Aguardando informacoes do arduino...")
-                sleep(1000)
-
-            self.add_data(self.serial.readline()) #obtem a string enviada pelo arduino
-            self.add_sensor_data(self.get_last_data())
-
-            if (limit > 0) and (count >= limit):
-                break
-            count += 1
 
 if __name__ == "__main__":
     g = ArduinoStreamGraph('teste', 9600)

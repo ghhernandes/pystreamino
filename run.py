@@ -1,3 +1,3 @@
-from app import log, arduino
+from app import log, graph
 
-s = arduino.ArduinoStreamGraph('port', 12900)
+s = graph.ArduinoStreamGraph('port', 12900)
